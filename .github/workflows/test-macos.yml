@@ -1,0 +1,36 @@
+name: test-macos
+
+on:
+  push:
+    branches:
+      - main
+    paths-ignore: 
+      - '**.md'
+  pull_request:
+    branches:
+      - main
+    paths-ignore: 
+      - '**.md'
+
+jobs:
+  test:
+    runs-on:
+      - macos-26
+
+    steps:
+    - name: Check out
+      uses: actions/checkout@v2
+
+    - name: Build
+      run: |
+        swift --version
+        swift build
+
+    - name: Test
+      run: |
+        xcodebuild -scheme direct-encoding test -sdk macosx -destination 'platform=macOS,name=My Mac' -enableCodeCoverage YES
+        
+    - name: Upload coverage reports to Codecov
+      uses: codecov/codecov-action@v5
+      with:
+        token: ${{ secrets.CODECOV_TOKEN }}

@@ -1,0 +1,31 @@
+name: test-ios
+
+on:
+  push:
+    branches:
+      - main
+    paths-ignore: 
+      - '**.md'
+  pull_request:
+    branches:
+      - main
+    paths-ignore: 
+      - '**.md'
+
+jobs:
+  test:
+    runs-on:
+      - macos-26
+
+    steps:
+    - name: Check out
+      uses: actions/checkout@v2
+
+    - name: Build
+      run: |
+        swift --version
+        swift build
+
+    - name: Test
+      run: |
+        xcodebuild -scheme direct-encoding test -sdk iphonesimulator -destination 'platform=iOS Simulator,name=iPhone 17'
