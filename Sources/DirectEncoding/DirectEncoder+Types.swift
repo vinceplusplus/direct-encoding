@@ -1,7 +1,7 @@
 import PointerKit
 
 public extension DirectEncoder {
-  static let currentVersion: Int = 1
+  static let currentVersion: Int = 2
 
   protocol Location {
     var byteOffset: Int { get }

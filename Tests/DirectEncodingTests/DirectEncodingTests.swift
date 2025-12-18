@@ -23,11 +23,14 @@ import PointerKit
       at compositeElementLocation: DirectEncoder.ElementLocation<DirectNode>,
       to encoder: inout DirectEncoder
     ) {
-      encoder.resolve(
+      encoder.resolveArrayPointer(
         compositeElementLocation,
         member: \.children,
-        with: encoder.encodeArray(buffer: children) { encoder, child, childLocation in
-          encoder.encodeMembers(child, at: childLocation)
+        with: encoder.encodeArrayPointer(buffer: children) { encoder, child, childLocation in
+          encoder.encodeMembers(
+            child,
+            at: childLocation,
+          )
         },
       )
     }
@@ -109,11 +112,15 @@ import PointerKit
       at compositeElementLocation: DirectEncoder.ElementLocation<DirectNode>,
       to encoder: inout DirectEncoder
     ) {
-      encoder.resolve(
+      encoder.resolveArrayPointer(
         compositeElementLocation,
         member: \.children,
-        with: encoder.encodeArray(buffer: children) { encoder, child, childLocation in
-          encoder.encodeMembers(child, at: childLocation, member: \.node)
+        with: encoder.encodeArrayPointer(buffer: children) { encoder, child, childLocation in
+          encoder.encodeMembers(
+            child,
+            at: childLocation,
+            member: \.node,
+          )
         },
       )
     }
@@ -166,15 +173,15 @@ import PointerKit
       at compositeElementLocation: DirectEncoder.ElementLocation<DirectNode>,
       to encoder: inout DirectEncoder
     ) {
-      encoder.resolve(
+      encoder.resolveCompositeElementPointer(
         compositeElementLocation,
         member: \.childA,
-        with: encoder.encodePointedCompositeElement(childA),
+        with: encoder.encodeCompositeElementPointer(childA),
       )
-      encoder.resolve(
+      encoder.resolveCompositeElementPointer(
         compositeElementLocation,
         member: \.childB,
-        with: encoder.encodePointedCompositeElement(childB),
+        with: encoder.encodeCompositeElementPointer(childB),
       )
     }
   }
@@ -247,10 +254,10 @@ import PointerKit
       at compositeElementLocation: DirectEncoder.ElementLocation<DirectNode>,
       to encoder: inout DirectEncoder
     ) {
-      encoder.resolve(
+      encoder.resolveCompositeElementPointer(
         compositeElementLocation,
         member: \.child,
-        with: encoder.encodePointedCompositeElement(child),
+        with: encoder.encodeCompositeElementPointer(child),
       )
     }
   }
@@ -295,7 +302,8 @@ import PointerKit
 
 @Test func misc() {
   struct DirectNode: DirectEncoder.CompositeElement {
-    var pointerToPointer: Pointer<Pointer<DirectNode>> = .nil
+    var pointerToPointer1: Pointer<Pointer<DirectNode>> = .nil
+    var pointerToPointer2: Pointer<Pointer<Int>> = .nil
     var pointers: Buffer<Pointer<DirectNode>> = .init(start: Pointer<UInt8>.nil, count: 0)
     var pointer1: Pointer<Int> = .nil
     var pointer2: Pointer<Int> = .nil
@@ -304,65 +312,109 @@ import PointerKit
     var array2: Buffer<Int> = .nil
     var array3: Buffer<Int> = .nil
     var array4: Buffer<Int> = .nil
+    var array5: Buffer<DirectNode> = .nil
+    var pointerToBuffer1: Pointer<Buffer<Int>> = .nil
+    var pointerToBuffer2: Pointer<Buffer<Int>> = .nil
     var value: Int64 = 0
 
     func encodeMembers(
       at compositeElementLocation: DirectEncoder.ElementLocation<DirectNode>,
       to encoder: inout DirectEncoder
     ) {
-      if pointerToPointer != .nil && pointerToPointer.pointee != .nil {
-        encoder.resolve(
+      if pointerToPointer1 != .nil && pointerToPointer1.pointee != .nil {
+        encoder.resolveElementPointer(
           compositeElementLocation,
-          member: \.pointerToPointer,
-          with: encoder.encodeElement(pointerToPointer.pointee) { encoder, pointer, pointerLocation in
-            encoder.resolve(
+          member: \.pointerToPointer1,
+          with: encoder.encodeElement(pointerToPointer1.pointee) { encoder, pointer, pointerLocation in
+            encoder.resolveCompositeElementPointer(
               pointerLocation,
-              with: encoder.encodeCompositeElement(pointer.pointee),
+              with: encoder.encodeCompositeElementPointer(pointer),
             )
           },
         )
       }
 
-      encoder.resolve(
+      encoder.resolveElementPointer(
+        compositeElementLocation,
+        member: \.pointerToPointer2,
+        with: encoder.encodeElementPointer(pointerToPointer2) { encoder, pointer, pointerLocation in
+          encoder.resolveElementPointer(
+            pointerLocation,
+            with: encoder.encodeElementPointer(pointer),
+          )
+        }
+      )
+
+      encoder.resolveElementPointer(
         compositeElementLocation,
         member: \.pointer1,
-        with: encoder.encodePointedElement(pointer1),
+        with: encoder.encodeElementPointer(pointer1),
       )
 
-      encoder.resolve(
+      encoder.resolveElementPointer(
         compositeElementLocation,
         member: \.pointer2,
-        with: encoder.encodePointedElement(pointer2),
+        with: encoder.encodeElementPointer(pointer2),
       )
 
-      encoder.resolve(
+      encoder.resolveElementPointer(
         compositeElementLocation,
         member: \.pointer3,
-        with: encoder.encodePointedElement(pointer3),
+        with: encoder.encodeElementPointer(pointer3),
       )
 
-      encoder.resolve(
+      encoder.resolveArrayPointer(
         compositeElementLocation,
         member: \.array1,
-        with: encoder.encodePointedArray(buffer: array1)
+        with: encoder.encodeArrayPointer(buffer: array1)
       )
 
-      encoder.resolve(
+      encoder.resolveArrayPointer(
         compositeElementLocation,
         member: \.array2,
-        with: encoder.encodePointedArray(buffer: array2)
+        with: encoder.encodeArrayPointer(buffer: array2)
       )
 
-      encoder.resolve(
+      encoder.resolveArrayPointer(
         compositeElementLocation,
         member: \.array3,
-        with: encoder.encodePointedArray(buffer: array3)
+        with: encoder.encodeArrayPointer(buffer: array3)
       )
 
-      encoder.resolve(
+      encoder.resolveArrayPointer(
         compositeElementLocation,
         member: \.array4,
-        with: encoder.encodePointedArray(start: array4.start, count: array4.count)
+        with: encoder.encodeArrayPointer(start: array4.start, count: array4.count)
+      )
+
+      encoder.resolveArrayPointer(
+        compositeElementLocation,
+        member: \.array5,
+        with: encoder.encodeArrayPointer(buffer: array5) { encoder, node, nodeLocation in
+          encoder.encodeMembers(node, at: nodeLocation)
+        },
+      )
+
+      encoder.resolveElementPointer(
+        compositeElementLocation,
+        member: \.pointerToBuffer1,
+        with: encoder.encodeElementPointer(pointerToBuffer1) { encoder, buffer, bufferLocation in
+          encoder.resolveArrayPointer(
+            bufferLocation,
+            with: encoder.encodeArrayPointer(buffer: buffer),
+          )
+        },
+      )
+
+      encoder.resolveElementPointer(
+        compositeElementLocation,
+        member: \.pointerToBuffer2,
+        with: encoder.encodeElementPointer(pointerToBuffer2) { encoder, buffer, bufferLocation in
+          encoder.resolveArrayPointer(
+            bufferLocation,
+            with: encoder.encodeArrayPointer(buffer: buffer),
+          )
+        },
       )
     }
   }
@@ -372,14 +424,21 @@ import PointerKit
   var root = DirectNode()
 
   root.value = 2
-  root.pointerToPointer = memoryPool.element(Pointer<DirectNode>.nil)
-  root.pointerToPointer.pointee = memoryPool.element(DirectNode())
-  root.pointerToPointer.pointee.pointee.value = 3
+  root.pointerToPointer1 = memoryPool.element(Pointer<DirectNode>.nil)
+  root.pointerToPointer1.pointee = memoryPool.element(DirectNode())
+  root.pointerToPointer1.pointee.pointee.value = 3
+  root.pointerToPointer2 = memoryPool.element(.nil)
+  root.pointerToPointer2.pointee = memoryPool.element(11)
   root.pointer1 = memoryPool.element(0)
   root.pointer1.pointee = 4
   root.pointer2 = root.pointer1
   root.array1 = memoryPool.array([5, 6, 7])
   root.array2 = root.array1
+  root.array5 = memoryPool.array([DirectNode(), DirectNode()])
+  root.array5[0].value = 42
+  root.array5[0].array5 = root.array5
+  root.pointerToBuffer1 = memoryPool.element(.nil)
+  root.pointerToBuffer1.pointee = memoryPool.array([8, 9, 10])
 
   var encoder = DirectEncoder()
 
@@ -388,12 +447,13 @@ import PointerKit
   let data = encoder.endEncoding()
 
   // change original after encoding to make sure decoded content doesn't accidentally reuse pointers
-  root.value = 8
-  root.pointerToPointer.pointee.pointee.value = 9
-  root.pointer1.pointee = 10
-  root.array1[0] = 11
-  root.array1[1] = 12
-  root.array1[2] = 13
+  root.value = 11
+  root.pointerToPointer1.pointee.pointee.value = 12
+  root.pointerToPointer2.pointee.pointee = 17
+  root.pointer1.pointee = 13
+  root.array1[0] = 14
+  root.array1[1] = 15
+  root.array1[2] = 16
 
   let dataBuffer = UnsafeMutablePointer<UInt8>.allocate(capacity: data.count)
 
@@ -404,7 +464,8 @@ import PointerKit
   let loadedDirectRoot = directDecoder.getRootPointer(0, DirectNode.self).pointee
 
   #expect(loadedDirectRoot.value == 2)
-  #expect(loadedDirectRoot.pointerToPointer.pointee.pointee.value == 3)
+  #expect(loadedDirectRoot.pointerToPointer1.pointee.pointee.value == 3)
+  #expect(loadedDirectRoot.pointerToPointer2.pointee.pointee == 11)
   #expect(loadedDirectRoot.pointer1.pointee == 4)
   #expect(loadedDirectRoot.pointer2.pointee == 4)
   #expect(loadedDirectRoot.pointer3 == .nil)
@@ -429,5 +490,26 @@ import PointerKit
   #expect(loadedDirectRoot.array2[0] == 55)
   #expect(loadedDirectRoot.array2[1] == 66)
   #expect(loadedDirectRoot.array2[2] == 77)
+
+  #expect(loadedDirectRoot.array5.count == 2)
+  #expect(loadedDirectRoot.array5[0].value == 42)
+  #expect(loadedDirectRoot.array5[1].value == 0)
+  #expect(loadedDirectRoot.array5[0].array5 == loadedDirectRoot.array5)
+  #expect(loadedDirectRoot.array5[0].array5[0].value == 42)
+  #expect(loadedDirectRoot.array5[0].array5[1].value == 0)
+
+  loadedDirectRoot.array5[0].value += 10
+  loadedDirectRoot.array5[1].value += 10
+
+  #expect(loadedDirectRoot.array5[0].value == 52)
+  #expect(loadedDirectRoot.array5[1].value == 10)
+  #expect(loadedDirectRoot.array5[0].array5[0].value == 52)
+  #expect(loadedDirectRoot.array5[0].array5[1].value == 10)
+
+  #expect(loadedDirectRoot.pointerToBuffer1.isNil == false)
+  #expect(loadedDirectRoot.pointerToBuffer1.pointee[0] == 8)
+  #expect(loadedDirectRoot.pointerToBuffer1.pointee[1] == 9)
+  #expect(loadedDirectRoot.pointerToBuffer1.pointee[2] == 10)
+  #expect(loadedDirectRoot.pointerToBuffer2.isNil == true)
 }
 
