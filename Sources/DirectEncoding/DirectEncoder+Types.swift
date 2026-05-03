@@ -1,7 +1,7 @@
 import PointerKit
 
 public extension DirectEncoder {
-  static let currentVersion: Int = 2
+  static let currentVersion: Int = 3
 
   protocol Location {
     var byteOffset: Int { get }
@@ -26,13 +26,24 @@ public extension DirectEncoder {
     )
   }
 
-  // NOTE: header cannot be a composite element
-  struct Header {
+  struct Header: CompositeElement {
     let version: Int = DirectEncoder.currentVersion
-    let pointerLocationCount: Int
-    let pointerLocationsLocation: ArrayLocation<RawLocation>
-    let rootElementLocationCount: Int
-    let rootElementLocationsLocation: ArrayLocation<RawLocation>
+    var rootElementLocations: Buffer<RawLocation>
+
+    // NOTE: these must be encoded last
+    var pointerLocationCount: Int
+    var pointerLocationsLocation: ArrayLocation<RawLocation>
+
+    public func encodeMembers(
+      at compositeElementLocation: ElementLocation<Header>,
+      to encoder: inout DirectEncoder,
+    ) {
+      encoder.resolveArrayPointer(
+        compositeElementLocation,
+        member: \.rootElementLocations,
+        with: encoder.encodeArrayPointer(buffer: rootElementLocations),
+      )
+    }
   }
 
   // NOTE: the inout DirectEncoder to work around weird escaping closure error or overlapping accesses error

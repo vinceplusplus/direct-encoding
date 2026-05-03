@@ -5,7 +5,7 @@ internal extension DirectEncoder {
   mutating func _encodeArray<T>(
     start: Pointer<T>,
     count: Int,
-    at overwriteLocation: Location? = nil,
+    at overwriteLocation: ArrayLocation<T>? = nil,
     onElementWritten: OnElementWritten<T>? = nil,
   ) -> ArrayLocation<T> {
     let location = _encodeBuffer(
@@ -27,7 +27,7 @@ internal extension DirectEncoder {
   @discardableResult
   mutating func _encodeArray<T>(
     buffer: Buffer<T>,
-    at overwriteLocation: Location? = nil,
+    at overwriteLocation: ArrayLocation<T>? = nil,
     onElementWritten: OnElementWritten<T>? = nil,
   ) -> ArrayLocation<T> {
     _encodeArray(
@@ -41,7 +41,7 @@ internal extension DirectEncoder {
   @discardableResult
   mutating func _encodeArray<T>(
     array: [T],
-    at overwriteLocation: Location? = nil,
+    at overwriteLocation: ArrayLocation<T>? = nil,
     onElementWritten: OnElementWritten<T>? = nil,
   ) -> ArrayLocation<T> {
     withBuffer(array: array) {

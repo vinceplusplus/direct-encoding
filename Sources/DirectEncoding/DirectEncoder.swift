@@ -21,16 +21,20 @@ public extension DirectEncoder {
   }
 
   consuming func endEncoding() -> Data {
-    let pointerLocationsLocation = _encodeArray(array: pointerLocations)
-    let rootElementLocationsLocation = _encodeArray(array: rootElementLocations)
-    let header = Header(
-      pointerLocationCount: pointerLocations.count,
-      pointerLocationsLocation: pointerLocationsLocation,
-      rootElementLocationCount: rootElementLocations.count,
-      rootElementLocationsLocation: rootElementLocationsLocation,
+    let memoryPool = MemoryPool()
+    var header = Header(
+      rootElementLocations: memoryPool.array(rootElementLocations),
+      pointerLocationCount: 0,
+      pointerLocationsLocation: .init(byteOffset: 0),
     )
+    encodeCompositeElement(header, at: headerLocation)
 
-    _encodeElement(header, at: headerLocation)
+    // NOTE: these must be encoded last
+    header.pointerLocationsLocation = _encodeArray(array: pointerLocations)
+    header.pointerLocationCount = pointerLocations.count
+
+    encodeElement(header, at: headerLocation, member: \.pointerLocationCount)
+    encodeElement(header, at: headerLocation, member: \.pointerLocationsLocation)
 
     return data
   }

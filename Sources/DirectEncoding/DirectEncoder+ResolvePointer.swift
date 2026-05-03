@@ -86,7 +86,7 @@ public extension DirectEncoder {
   ) {
     guard let pointeeLocation else { return }
 
-    _encodeElement(pointeeLocation.byteOffset, at: pointerLocation)
+    _encodeElement(pointeeLocation.byteOffset, at: .init(pointerLocation))
     pointerLocations.append(.init(pointerLocation))
   }
 }

@@ -4,7 +4,7 @@ public extension DirectEncoder {
   @discardableResult
   mutating func encodeCompositeElement<T: CompositeElement>(
     _ compositeElement: T,
-    at overwriteLocation: Location? = nil,
+    at overwriteLocation: ElementLocation<T>? = nil,
   ) -> ElementLocation<T> {
     let location = _encodeElement(compositeElement, at: overwriteLocation)
 
@@ -16,7 +16,7 @@ public extension DirectEncoder {
   @discardableResult
   mutating func encodeCompositeElementPointer<T: CompositeElement>(
     _ compositeElementPointer: Pointer<T>,
-    at overwriteLocation: Location? = nil,
+    at overwriteLocation: ElementLocation<T>? = nil,
   ) -> ElementLocation<T>? {
     guard !compositeElementPointer.isNil else { return nil }
 
@@ -56,10 +56,7 @@ public extension DirectEncoder {
     let member = element[keyPath: memberKey]
     let memberLocation = elementLocation.memberLocation(of: memberKey)
 
-    return member.encodeMembers(
-      at: memberLocation,
-      to: &self,
-    )
+    return encodeMembers(member, at: memberLocation)
   }
 }
 

@@ -2,26 +2,21 @@ import PointerKit
 
 public struct DirectDecoder: ~Copyable {
   let dataBuffer: Buffer<UInt8>
-  let header: DirectEncoder.Header
+  let headerPointer: Pointer<DirectEncoder.Header>
   let pointerLocations: Buffer<DirectEncoder.RawLocation>
-  let rootElementLocations: Buffer<DirectEncoder.RawLocation>
 
   // NOTE: will consume the data buffer
   public init(consume dataBuffer: Buffer<UInt8>) {
     assert(dataBuffer.count >= MemoryLayout<DirectEncoder.Header>.size)
 
     self.dataBuffer = dataBuffer
-    self.header = Pointer<DirectEncoder.Header>(dataBuffer.start).pointee
+    self.headerPointer = Pointer<DirectEncoder.Header>(dataBuffer.start)
 
-    assert(self.header.version == DirectEncoder.currentVersion)
+    assert(self.headerPointer.pointee.version == DirectEncoder.currentVersion)
 
     self.pointerLocations = .init(
-      start: dataBuffer.start + header.pointerLocationsLocation.byteOffset,
-      count: header.pointerLocationCount,
-    )
-    self.rootElementLocations = .init(
-      start: dataBuffer.start + header.rootElementLocationsLocation.byteOffset,
-      count: header.rootElementLocationCount,
+      start: dataBuffer.start + headerPointer.pointee.pointerLocationsLocation.byteOffset,
+      count: headerPointer.pointee.pointerLocationCount,
     )
 
     Self.translatePointers(pointerLocations, dataBuffer.start)
@@ -32,7 +27,7 @@ public struct DirectDecoder: ~Copyable {
   }
 
   public func getRootPointer<T>(_ index: Int, _ type: T.Type) -> Pointer<T> {
-    .init(dataBuffer.start + rootElementLocations[index].byteOffset)
+    .init(dataBuffer.start + headerPointer.pointee.rootElementLocations[index].byteOffset)
   }
 }
 

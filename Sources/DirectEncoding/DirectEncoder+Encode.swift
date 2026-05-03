@@ -4,17 +4,40 @@ public extension DirectEncoder {
   @discardableResult
   mutating func encodeElement<T>(
     _ element: T,
-    at overwriteLocation: Location? = nil,
+    at overwriteLocation: ElementLocation<T>? = nil,
     onWritten: OnWritten<T>? = nil,
   ) -> ElementLocation<T> {
     _encodeElement(element, at: overwriteLocation, onWritten: onWritten)
+  }
+
+  @discardableResult
+  mutating func encodeElement<T, V>(
+    _ element: T,
+    at overwriteLocation: ElementLocation<T>? = nil,
+    member key: KeyPath<T, V>,
+    onWritten: OnWritten<V>? = nil,
+  ) -> ElementLocation<V> {
+    if let overwriteLocation {
+      let memberLocation = overwriteLocation.memberLocation(of: key)
+
+      return _encodeElement(
+        element[keyPath: key],
+        at: memberLocation,
+        onWritten: onWritten,
+      )
+    } else {
+      return _encodeElement(
+        element[keyPath: key],
+        onWritten: onWritten,
+      )
+    }
   }
 }
 
 public extension DirectEncoder {
   mutating func encodeElementPointer<T>(
     _ elementPointer: Pointer<T>,
-    at overwriteLocation: Location? = nil,
+    at overwriteLocation: ElementLocation<T>? = nil,
     onWritten: OnWritten<T>? = nil,
   ) -> ElementLocation<T>? {
     guard !elementPointer.isNil else { return nil }
@@ -40,7 +63,7 @@ public extension DirectEncoder {
   mutating func encodeArrayPointer<T>(
     start: Pointer<T>,
     count: Int,
-    at overwriteLocation: Location? = nil,
+    at overwriteLocation: ArrayLocation<T>? = nil,
     onElementWritten: OnElementWritten<T>? = nil,
   ) -> ArrayLocation<T>? {
     guard !start.isNil else { return nil }
@@ -70,7 +93,7 @@ public extension DirectEncoder {
   @discardableResult
   mutating func encodeArrayPointer<T>(
     buffer: Buffer<T>,
-    at overwriteLocation: Location? = nil,
+    at overwriteLocation: ArrayLocation<T>? = nil,
     onElementWritten: OnElementWritten<T>? = nil,
   ) -> ArrayLocation<T>? {
     guard !buffer.start.isNil else { return nil }

@@ -316,6 +316,7 @@ import PointerKit
     var pointerToBuffer1: Pointer<Buffer<Int>> = .nil
     var pointerToBuffer2: Pointer<Buffer<Int>> = .nil
     var value: Int64 = 0
+    var value2: Int64 = 0
 
     func encodeMembers(
       at compositeElementLocation: DirectEncoder.ElementLocation<DirectNode>,
@@ -424,6 +425,7 @@ import PointerKit
   var root = DirectNode()
 
   root.value = 2
+  root.value2 = 3
   root.pointerToPointer1 = memoryPool.element(Pointer<DirectNode>.nil)
   root.pointerToPointer1.pointee = memoryPool.element(DirectNode())
   root.pointerToPointer1.pointee.pointee.value = 3
@@ -441,13 +443,24 @@ import PointerKit
   root.pointerToBuffer1.pointee = memoryPool.array([8, 9, 10])
 
   var encoder = DirectEncoder()
+  let rootLocation = encoder.encodeCompositeElement(root)
 
+  encoder.appendRoot(location: rootLocation)
+
+  // we change our mind
+  root.value2 = 4
+  encoder.encodeElement(root, at: rootLocation, member: \.value2)
+
+  // NOTE: to silence the uncovered closure for pointerToBuffer2
+  root.pointerToBuffer2 = memoryPool.element(.nil)
+  root.pointerToBuffer2.pointee = memoryPool.array([18, 19, 20])
   encoder.appendRoot(location: encoder.encodeCompositeElement(root))
 
   let data = encoder.endEncoding()
 
   // change original after encoding to make sure decoded content doesn't accidentally reuse pointers
   root.value = 11
+  root.value = 17
   root.pointerToPointer1.pointee.pointee.value = 12
   root.pointerToPointer2.pointee.pointee = 17
   root.pointer1.pointee = 13
@@ -464,6 +477,7 @@ import PointerKit
   let loadedDirectRoot = directDecoder.getRootPointer(0, DirectNode.self).pointee
 
   #expect(loadedDirectRoot.value == 2)
+  #expect(loadedDirectRoot.value2 == 4)
   #expect(loadedDirectRoot.pointerToPointer1.pointee.pointee.value == 3)
   #expect(loadedDirectRoot.pointerToPointer2.pointee.pointee == 11)
   #expect(loadedDirectRoot.pointer1.pointee == 4)

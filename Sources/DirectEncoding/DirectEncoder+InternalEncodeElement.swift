@@ -14,7 +14,7 @@ internal extension DirectEncoder {
   @discardableResult
   mutating func _encodeElement<T>(
     _ element: T,
-    at overwriteLocation: Location? = nil,
+    at overwriteLocation: ElementLocation<T>? = nil,
     onWritten: OnWritten<T>? = nil,
   ) -> ElementLocation<T> {
     let location = withBuffer(element: element) {
