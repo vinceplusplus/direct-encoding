@@ -30,7 +30,7 @@ public extension DirectEncoder {
     let version: Int = DirectEncoder.currentVersion
     var rootElementLocations: Buffer<RawLocation>
 
-    // NOTE: these must be encoded last
+    // NOTE: these must be encoded last and are the only ones to be taken care of in a special way
     var pointerLocationCount: Int
     var pointerLocationsLocation: ArrayLocation<RawLocation>
 

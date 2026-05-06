@@ -300,6 +300,52 @@ import PointerKit
   #expect(loadedDirectRoot.child.pointee.child.pointee.child.pointee.value == 52)
 }
 
+@Test func strings() {
+  struct DirectNode: DirectEncoder.CompositeElement {
+    var smallString: String = ""
+    var largeString: String = ""
+    var nonASCIIString: String = ""
+
+    func encodeMembers(
+      at compositeElementLocation: DirectEncoder.ElementLocation<DirectNode>,
+      to encoder: inout DirectEncoder
+    ) {
+      encoder.encodeMembers(self, at: compositeElementLocation, member: \.smallString)
+      encoder.encodeMembers(self, at: compositeElementLocation, member: \.largeString)
+    }
+  }
+
+  var root = DirectNode()
+
+  root.smallString = "0123456789abcde"
+  root.largeString = "0123456789abcdef"
+  root.nonASCIIString = "Héllö! ✨ ¡Olé! 🌊 ©® 2024 🚀"
+
+  var encoder = DirectEncoder()
+  let rootLocation = encoder.encodeCompositeElement(root)
+
+  encoder.appendRoot(location: rootLocation)
+
+  let data = encoder.endEncoding()
+
+  // change original after encoding to make sure decoded content doesn't accidentally reuse pointers
+  root.smallString = "0123456789abcdefghijkl"
+  root.largeString = "01234"
+  root.nonASCIIString = "foo"
+
+  let dataBuffer = UnsafeMutablePointer<UInt8>.allocate(capacity: data.count)
+
+  data.copyBytes(to: dataBuffer, count: data.count)
+
+  let directDecoder = DirectDecoder(consume: .init(start: dataBuffer, count: data.count))
+
+  let loadedDirectRoot = directDecoder.getRootPointer(0, DirectNode.self).pointee
+
+  #expect(loadedDirectRoot.smallString == "0123456789abcde")
+  #expect(loadedDirectRoot.largeString == "0123456789abcdef")
+  #expect(loadedDirectRoot.nonASCIIString == "Héllö! ✨ ¡Olé! 🌊 ©® 2024 🚀")
+}
+
 @Test func misc() {
   struct DirectNode: DirectEncoder.CompositeElement {
     var pointerToPointer1: Pointer<Pointer<DirectNode>> = .nil

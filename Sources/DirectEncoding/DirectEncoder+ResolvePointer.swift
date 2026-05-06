@@ -80,6 +80,15 @@ public extension DirectEncoder {
     resolvePointer(memberLocation, with: pointeeLocation)
   }
 
+  mutating func resolvePointer<T, V>(
+    _ elementLocation: ElementLocation<T>,
+    member key: KeyPath<T, V>,
+  ) {
+    let memberLocation = elementLocation.memberLocation(of: key)
+
+    resolvePointer(memberLocation)
+  }
+
   mutating func resolvePointer(
     _ pointerLocation: Location,
     with pointeeLocation: Location?,
@@ -87,6 +96,10 @@ public extension DirectEncoder {
     guard let pointeeLocation else { return }
 
     _encodeElement(pointeeLocation.byteOffset, at: .init(pointerLocation))
+    resolvePointer(pointerLocation)
+  }
+
+  mutating func resolvePointer(_ pointerLocation: Location) {
     pointerLocations.append(.init(pointerLocation))
   }
 }

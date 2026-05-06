@@ -12,7 +12,7 @@ let package = Package(
         ),
     ],
     dependencies: [
-      .package(url: "https://github.com/vinceplusplus/pointer-kit.git", from: "1.2.0"),
+      .package(url: "https://github.com/vinceplusplus/pointer-kit.git", from: "2.0.0"),
     ],
     targets: [
         .target(
