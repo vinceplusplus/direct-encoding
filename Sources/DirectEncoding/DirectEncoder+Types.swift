@@ -27,7 +27,7 @@ public extension DirectEncoder {
   }
 
   struct Header: CompositeElement {
-    let version: Int = DirectEncoder.currentVersion
+    let version: Int
     var rootElementLocations: Buffer<RawLocation>
 
     // NOTE: these must be encoded last and are the only ones to be taken care of in a special way

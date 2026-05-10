@@ -502,6 +502,15 @@ import PointerKit
   root.pointerToBuffer2.pointee = memoryPool.array([18, 19, 20])
   encoder.appendRoot(location: encoder.encodeCompositeElement(root))
 
+  struct Composite {
+    var member: Int = 0
+  }
+
+  var composite = Composite()
+
+  composite.member = 42
+  encoder.appendRoot(location: encoder.encodeElement(composite, member: \.member))
+
   let data = encoder.endEncoding()
 
   // change original after encoding to make sure decoded content doesn't accidentally reuse pointers
@@ -513,6 +522,8 @@ import PointerKit
   root.array1[0] = 14
   root.array1[1] = 15
   root.array1[2] = 16
+
+  composite.member = 23
 
   let dataBuffer = UnsafeMutablePointer<UInt8>.allocate(capacity: data.count)
 
@@ -571,5 +582,9 @@ import PointerKit
   #expect(loadedDirectRoot.pointerToBuffer1.pointee[1] == 9)
   #expect(loadedDirectRoot.pointerToBuffer1.pointee[2] == 10)
   #expect(loadedDirectRoot.pointerToBuffer2.isNil == true)
+
+  let loadedMember = directDecoder.getRootPointer(2, Int.self).pointee
+
+  #expect(loadedMember == 42)
 }
 

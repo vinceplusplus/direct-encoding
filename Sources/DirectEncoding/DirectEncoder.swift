@@ -23,6 +23,7 @@ public extension DirectEncoder {
   consuming func endEncoding() -> Data {
     let memoryPool = MemoryPool()
     var header = Header(
+      version: Self.currentVersion,
       rootElementLocations: memoryPool.array(rootElementLocations),
       pointerLocationCount: 0,
       pointerLocationsLocation: .init(byteOffset: 0),
