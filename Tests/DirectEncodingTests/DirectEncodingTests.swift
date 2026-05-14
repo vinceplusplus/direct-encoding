@@ -1,3 +1,4 @@
+import Foundation
 import Testing
 @testable import DirectEncoding
 import PointerKit
@@ -586,5 +587,43 @@ import PointerKit
   let loadedMember = directDecoder.getRootPointer(2, Int.self).pointee
 
   #expect(loadedMember == 42)
+}
+
+@Test func contentsOfFile() throws {
+  struct DirectNode: DirectEncoder.CompositeElement {
+    var value: Int64 = 0
+
+    func encodeMembers(
+      at compositeElementLocation: DirectEncoder.ElementLocation<DirectNode>,
+      to encoder: inout DirectEncoder
+    ) {
+    }
+  }
+
+  var root = DirectNode()
+  root.value = 42
+
+  var encoder = DirectEncoder()
+  encoder.appendRoot(location: encoder.encodeCompositeElement(root))
+
+  let data = encoder.endEncoding()
+  let tempFile = FileManager
+    .default
+    .temporaryDirectory
+    .appendingPathComponent(UUID().uuidString)
+
+  try data.write(to: tempFile)
+  defer { try? FileManager.default.removeItem(at: tempFile) }
+
+  let decoder = try DirectDecoder(contentsOfFile: tempFile.path)
+  let loadedValue = decoder.getRootPointer(0, DirectNode.self).pointee.value
+
+  #expect(loadedValue == 42)
+}
+
+@Test func contentsOfFileNonexistent() {
+  #expect(throws: (any Error).self) {
+    _ = try DirectDecoder(contentsOfFile: "/tmp/nonexistent-file-\(UUID().uuidString)")
+  }
 }
 

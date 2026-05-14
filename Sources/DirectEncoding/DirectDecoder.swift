@@ -1,4 +1,5 @@
 import PointerKit
+import System
 
 public struct DirectDecoder: ~Copyable {
   let dataBuffer: Buffer<UInt8>
@@ -20,6 +21,24 @@ public struct DirectDecoder: ~Copyable {
     )
 
     Self.translatePointers(pointerLocations, dataBuffer.start)
+  }
+
+  public init(contentsOfFile filePath: String) throws {
+    let fd = try FileDescriptor.open(FilePath(filePath), .readOnly)
+
+    defer {
+      try? fd.close()
+    }
+
+    let fileSize = Int(try fd.seek(offset: 0, from: .end))
+    let nativeBufferPointer = UnsafeMutableRawBufferPointer.allocate(byteCount: fileSize, alignment: 128)
+
+    try fd.seek(offset: 0, from: .start)
+    _ = try fd.read(into: nativeBufferPointer)
+
+    let buffer = Buffer<UInt8>(nativeBufferPointer)
+
+    self.init(consume: buffer)
   }
 
   deinit {
