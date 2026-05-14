@@ -7,6 +7,7 @@ let package = Package(
     name: "direct-encoding",
     platforms: [
       .macOS(.v11),
+      .iOS(.v14),
     ],
     products: [
         .library(
