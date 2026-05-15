@@ -31,18 +31,16 @@ public struct DirectDecoder: ~Copyable {
     }
 
     let fileSize = Int(try fd.seek(offset: 0, from: .end))
-    let nativeBufferPointer = UnsafeMutableRawBufferPointer.allocate(byteCount: fileSize, alignment: 128)
+    let buffer = Buffer<UInt8>.allocate(count: fileSize, alignment: 128)
 
     try fd.seek(offset: 0, from: .start)
-    _ = try fd.read(into: nativeBufferPointer)
-
-    let buffer = Buffer<UInt8>(nativeBufferPointer)
+    _ = try fd.read(into: buffer.nativeMutableRaw())
 
     self.init(consume: buffer)
   }
 
   deinit {
-    dataBuffer.native().deallocate()
+    dataBuffer.deallocate()
   }
 
   public func getRootPointer<T>(_ index: Int, _ type: T.Type) -> Pointer<T> {

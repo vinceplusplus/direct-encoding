@@ -1,13 +1,13 @@
 {
-  "originHash" : "406376ff8d70da269ab29fb3937d1371f060146b61776f6493c3c19cddb51106",
+  "originHash" : "84869337dbfc846a450db3a56f669c21e48dc69f294d6a7e63a1ae3b401204af",
   "pins" : [
     {
       "identity" : "pointer-kit",
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/vinceplusplus/pointer-kit.git",
       "state" : {
-        "revision" : "51f1d98fbf957d51ad735b39f4bdb8882c7486c8",
-        "version" : "2.0.0"
+        "revision" : "38d457dad5f14888bd80775cb59c62091705ab97",
+        "version" : "2.1.0"
       }
     }
   ],
