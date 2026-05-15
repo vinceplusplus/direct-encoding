@@ -627,3 +627,99 @@ import PointerKit
   }
 }
 
+@Test func compositeElementArrays() {
+  struct DirectNode: DirectEncoder.CompositeElement {
+    let children: Buffer<DirectNode>
+    var value: Int64
+    var tag: Int64
+
+    init(value: Int64, children: Buffer<DirectNode> = .nil) {
+      self.value = value
+      self.children = children
+      self.tag = 0
+    }
+
+    func encodeMembers(
+      at compositeElementLocation: DirectEncoder.ElementLocation<DirectNode>,
+      to encoder: inout DirectEncoder
+    ) {
+      encoder.resolveArrayPointer(
+        compositeElementLocation,
+        member: \.children,
+        with: encoder.encodeCompositeElementArrayPointer(buffer: children),
+      )
+    }
+  }
+
+  let memoryPool = MemoryPool()
+
+  // buffer variant: tree with nested children via encodeMembers
+  var root = DirectNode(value: 1, children: memoryPool.array([
+    DirectNode(value: 2, children: memoryPool.array([DirectNode(value: 4)])),
+    DirectNode(value: 3),
+  ]))
+
+  var encoder = DirectEncoder()
+  encoder.appendRoot(location: encoder.encodeCompositeElement(root))
+
+  // start/count variant
+  let pointerArray = memoryPool.array([DirectNode(value: 10), DirectNode(value: 20)])
+  encoder.appendRoot(
+    location: encoder.encodeCompositeElementArrayPointer(start: pointerArray.start, count: pointerArray.count)!
+  )
+
+  // onElementWritten callback
+  let taggedArray = memoryPool.array([DirectNode(value: 50), DirectNode(value: 60)])
+  encoder.appendRoot(
+    location: encoder.encodeCompositeElementArrayPointer(buffer: taggedArray) { encoder, child, childLocation in
+      var tagged = child
+      tagged.tag = child.value + 100
+      encoder.encodeElement(tagged, at: childLocation, member: \.tag)
+    }!
+  )
+
+  // overwrite
+  let initialArray = memoryPool.array([DirectNode(value: 70), DirectNode(value: 71)])
+  let arrayLocation = encoder.encodeCompositeElementArrayPointer(buffer: initialArray)!
+  let overwrittenArray = memoryPool.array([DirectNode(value: 80), DirectNode(value: 81)])
+  encoder.encodeCompositeElementArrayPointer(buffer: overwrittenArray, at: arrayLocation)
+  encoder.appendRoot(location: arrayLocation)
+
+  let data = encoder.endEncoding()
+
+  root.value = 99; root.children[0].value = 98; root.children[0].children[0].value = 97
+  pointerArray[0].value = 96; pointerArray[1].value = 95
+  taggedArray[0].value = 94; taggedArray[1].value = 93
+  overwrittenArray[0].value = 92; overwrittenArray[1].value = 91
+
+  let dataBuffer = UnsafeMutablePointer<UInt8>.allocate(capacity: data.count)
+  data.copyBytes(to: dataBuffer, count: data.count)
+  let decoder = DirectDecoder(consume: .init(start: dataBuffer, count: data.count))
+
+  // verify buffer variant
+  let rootNode = decoder.getRootPointer(0, DirectNode.self).pointee
+  #expect(rootNode.value == 1)
+  #expect(rootNode.children.count == 2)
+  #expect(rootNode.children[0].value == 2)
+  #expect(rootNode.children[1].value == 3)
+  #expect(rootNode.children[0].children.count == 1)
+  #expect(rootNode.children[0].children[0].value == 4)
+
+  // verify start/count variant
+  let pointerNode = decoder.getRootPointer(1, DirectNode.self)
+  #expect(pointerNode[0].value == 10)
+  #expect(pointerNode[1].value == 20)
+
+  // verify onElementWritten callback
+  let taggedNode = decoder.getRootPointer(2, DirectNode.self)
+  #expect(taggedNode[0].value == 50)
+  #expect(taggedNode[0].tag == 150)
+  #expect(taggedNode[1].value == 60)
+  #expect(taggedNode[1].tag == 160)
+
+  // verify overwrite
+  let overwrittenNode = decoder.getRootPointer(3, DirectNode.self)
+  #expect(overwrittenNode[0].value == 80)
+  #expect(overwrittenNode[1].value == 81)
+}
+
