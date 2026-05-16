@@ -1,6 +1,6 @@
 # direct-encoding
 
-Dangerously fast zero-copy binary encoding for Swift structs. Encode by `memcpy`-ing your struct's native memory layout, decode with a single pointer-fixup pass — every field access is a raw pointer dereference. No parsing, no copying, no ceremony.
+Zero-copy binary encoding for Swift structs. Encode by `memcpy`-ing your struct's native memory layout, decode with a single pointer-fixup pass — every field access is a raw pointer dereference. No parsing, no copying, no ceremony.
 
 <p>
   <a href="https://github.com/vinceplusplus/direct-encoding/actions?query=workflow%3Atest-macos+event%3Apush">
@@ -62,7 +62,7 @@ print(root.pointee.name)  // "hello"
 print(root.pointee.value) // 42
 ```
 
-## Dangerously fast
+## Why it's fast
 
 | Phase | What happens |
 |-------|-------------|
